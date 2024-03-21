@@ -1,0 +1,50 @@
+project_name: "codebuild_devsecops_iac_images"
+framework_version: 2
+
+account_devsecops: "123456789021"
+region_devsecops: "us-east-2"
+
+#Repository for project
+repository_properties:
+  repository_name: "cdkv2_devsecops_iac_codebuild_image"
+  create_repository: "true"
+  description: "Repository for Codebuild images for DevSecOps IaC Framework"
+  branch: "master"
+
+#Designed for pipeline
+environments:
+  - environment: 'prod'
+    deployment_account: '123456789014'
+    deployment_region: "us-east-2"
+    partner_review_email:
+      - 'peer@mycompany.com'
+
+ecr_repository_properties:
+  - repository_name: "codebuild_devsecops_iac"
+    lifecycle_rule:
+      tags_prefix:
+        - "prod"
+        - "dev"
+      max_images: 10
+    resource_policy:
+      accounts:
+        - account_id: "123456789014"
+          type: "read"
+      ous:
+        - id: "o-xxxxxxxxxx/*/ou-xxxx-xxxxxxxx/*"
+          type: "read"
+    deploy_app: "True"
+    app_properties:
+      build_spec_path: "../app/buildspec.yaml"
+      version: "1.1.0"
+
+
+
+# Tags definitions align with corporation instructions
+tags:
+  - key: 'Project'
+    value: 'DevSecOpsIaC'
+  - key: 'Environment'
+    value: 'test'
+
+
