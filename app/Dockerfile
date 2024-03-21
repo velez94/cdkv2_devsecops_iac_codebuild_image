@@ -313,7 +313,7 @@ RUN set -ex \
       && terragrunt --version
 #************************************TFswitch******************************************
 RUN set -ex \
-    &&  curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | sudo bash \
+    && curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash \
     && tfswitch --version
 
 #**********************Terraform docs ************************************
