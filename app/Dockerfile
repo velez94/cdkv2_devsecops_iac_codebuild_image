@@ -215,6 +215,7 @@ RUN set -ex \
     && docker -v \
     # replace runc package to resolve CVE-2024-21626
     && apt-get update && apt-get -y install runc \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && rm -f /usr/local/bin/runc \
     && ln -s /usr/sbin/runc /usr/local/bin/runc \
     && runc -v \
@@ -237,8 +238,7 @@ RUN set -ex \
     && chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx \
     && ln -s /usr/local/lib/docker/cli-plugins/docker-buildx /usr/local/bin/docker-buildx \
     # Ensure docker-buildx works
-    && docker-buildx version \
-    && docker buildx version
+    && docker-buildx version
 
 VOLUME /var/lib/docker
 #*********************** END  DOCKER  ****************************
@@ -250,7 +250,9 @@ RUN goenv global $GOLANG_20_VERSION
 #********************** install SO packages ******************
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -ex \
-    && apt-get install figlet jq tree xvfb libfontconfig wkhtmltopdf graphviz gawk golint -y -qq
+    && apt-get update \
+    && apt-get install figlet jq tree xvfb libfontconfig wkhtmltopdf graphviz gawk golint -y -qq \
+    &&  rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 #********************** Python libraries *********************
 ARG PYTHON_PYMSTEAMS_VERSION=0.2.2
 ARG PYTHON_PDFKIT_VERSION=1.0.0
@@ -281,21 +283,21 @@ RUN set -ex \
     && pip3 install --no-cache-dir --upgrade azure-devops
 
 #************************** Terraform *************************************
-ARG TERRAFORM_VERSION=1.7.3
+ARG TERRAFORM_VERSION=1.7.5
 RUN set -ex \
-    && curl -O https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip  -d /usr/local/bin/
-RUN set -ex \
-    && mkdir -p $HOME/.terraform.d/plugin-cache && echo 'plugin_cache_dir   = "$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
+    && curl -O https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+    && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip  -d /usr/local/bin/ \
+    && mkdir -p "$HOME"/.terraform.d/plugin-cache && echo 'plugin_cache_dir   = "$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
 
 #************************* Terragrunt *************************************
-ARG TERRAGRUNT_VERSION=0.55.1
+ARG TERRAGRUNT_VERSION=0.55.16
 RUN set -ex \
      && wget https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 -q \
      && mv terragrunt_linux_amd64 /usr/local/bin/terragrunt \
      && chmod +x /usr/local/bin/terragrunt
 
 #*********************** Terramate ****************************************
-ARG TERRAMATE_VERSION=0.4.5
+ARG TERRAMATE_VERSION=0.5.3
 RUN set -ex \
      && wget https://github.com/mineiros-io/terramate/releases/download/v${TERRAMATE_VERSION}/terramate_${TERRAMATE_VERSION}_linux_x86_64.tar.gz \
       && tar -xzf terramate_${TERRAMATE_VERSION}_linux_x86_64.tar.gz \
@@ -309,9 +311,13 @@ RUN set -ex \
       && mv tfsec-linux-amd64 /usr/local/bin/tfsec \
       && chmod +x /usr/local/bin/tfsec \
       && terragrunt --version
+#************************************TFswitch******************************************
+RUN set -ex \
+    &&  curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | sudo bash \
+    && tfswitch --version
 
 #**********************Terraform docs ************************************
-ARG TERRRAFORM_DOCS_VERSION=0.17.0
+ARG TERRRAFORM_DOCS_VERSION=0.16.0
 RUN set -ex \
     && curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v${TERRRAFORM_DOCS_VERSION}/terraform-docs-v${TERRRAFORM_DOCS_VERSION}-$(uname)-amd64.tar.gz \
     && tar -xzf terraform-docs.tar.gz \
