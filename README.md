@@ -8,9 +8,13 @@
     - [Code Diagram structure](#code-diagram-structure)
     - [How To](#how-to)
       - [Modify project options](#modify-project-options)
-      - [Create commit changes and push](#create-commit-changes-and-push)
+      - [Integrate with slack](#integrate-with-slack)
+        - [To configure a Slack client](#to-configure-a-slack-client)
+        - [To configure a Slack channel](#to-configure-a-slack-channel)
       - [Deploy manual project](#deploy-manual-project)
+        - [Create commit changes and push](#create-commit-changes-and-push)
   - [Useful commands](#useful-commands)
+    - [Some utils commands](#some-utils-commands)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -28,6 +32,7 @@
 - [AWS CodePipeline](https://aws.amazon.com/codepipeline/): fully managed continuous delivery service that helps you automate your release pipelines for fast and reliable application and infrastructure updates.
 - [AWS Key Management Service (AWS KMS)](https://aws.amazon.com/kms/): lets you create, manage, and control cryptographic keys across your applications and more than 100 AWS services.
 - [AWS CloudFormation](https://aws.amazon.com/cloudformation/): Speed up cloud provisioning with infrastructure as code
+- [AWS Chatbot](https://aws.amazon.com/chatbot/): Monitor, operate, and troubleshoot your AWS resources with interactive ChatOps
 
 ### Reference Architecture Diagram
 
@@ -78,7 +83,13 @@ environments:
     deployment_account: '124962754123'
     deployment_region: "us-east-2"
     partner_review_email:
-      - 'someone@mycmpany.com'
+      - 'wilmar.velezl2@mycmpany.com'
+chatops:
+  slack_integration:
+    enable: "true"
+    slack_workspace_id: "T06U1RXXXX"
+    slack_channel_id: "C06TY4XXXX"
+
 
 ecr_repository_properties:
   - repository_name: "codebuild_devsecops_iac"
@@ -94,7 +105,11 @@ ecr_repository_properties:
       ous:
         - id: "o-xxxxxxxxxx/*/ou-xxxx-xxxxxxxx/*"
           type: "read"
-      
+      projects:
+        - name: "ecs-fargate-pattern-Sophos"
+          region: "us-east-2"
+          account: "225311078840"
+          type: "read"
     deploy_app: "True"
     app_properties:
       build_spec_path: "../app/buildspec.yaml"
@@ -105,9 +120,45 @@ In the previous code you can find the abstraction and properties for sharing ECR
 
 > Visit [Private repository policy examples](https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-policy-examples.htm) for more about resource policies in ECR.
 
-#### Create commit changes and push 
+#### Integrate with slack
 
-Create commit and push your changes to master branch or create pull request.
+This project has a slack integration component. The necessary parameters for integration are: 
+```yaml 
+slack_workspace_id: "T06U1RXXXX"
+slack_channel_id: "C06TY4XXXX"
+```
+
+**You must follow the next steps before deployment:**
+
+##### To configure a Slack client
+
+1. Add AWS Chatbot to the Slack workspace:
+   a.     In Slack, on the left navigation pane, choose Automations.
+    > **Note**: If you do not see Automations in the left navigation pane, choose More, then choose Automations.
+
+    b. If AWS Chatbot is not listed, choose the Browse Apps Directory button.
+    c. Browse the directory for the AWS Chatbot app and then choose Add to add AWS Chatbot to your workspace. 
+2. Open the AWS Chatbot console at https://console.aws.amazon.com/chatbot/
+3. Under Configure a chat client, choose Slack, then choose Configure. 
+    > **Note**: After choosing Configure, you'll be redirected to Slack's authorization page to request permission for AWS Chatbot to access your information. For more information, see Chat client application permissions.
+
+4. From the dropdown list at the top right, choose the Slack workspace that you want to use with AWS Chatbot.
+   There's no limit to the number of workspaces that you can set up for AWS Chatbot, but you can set up only one at a time.
+5. Choose **Allow**.
+
+##### To configure a Slack channel
+
+1. Add AWS Chatbot to the Slack channel:
+
+    a. In your Slack channel, enter `invite @aws`.
+
+    b. Choose **Invite Them**.
+
+lejaalejaaaa
+If you want to customize the slack actions you can create custom buttons with cli automations or for invoking lambda functions. 
+
+![](project_configs/docs/chatops/chatops_1.png)
+
 
 #### Deploy manual project
 This is a project for CDK development with Python.
@@ -156,6 +207,10 @@ To add additional dependencies, for example other CDK libraries, just add
 them to your `setup.py` file and rerun the `pip install -r requirements.txt`
 command.
 
+##### Create commit changes and push 
+
+Create commit and push your changes to master branch or create pull request.
+
 ## Useful commands
 
  * `cdk ls`          list all stacks in the app
@@ -165,3 +220,13 @@ command.
  * `cdk docs`        open CDK documentation
 
 Enjoy!
+
+### Some utils commands
+
+```bash
+
+aws codepipeline get-pipeline-state --name Pipeline_codebuild_devsecops_iac_images  --query stageStates[*].actionStates[?actionName==`ApprovePushImage`]
+
+# get token
+aws codepipeline get-pipeline-state --name Pipeline_codebuild_devsecops_iac_images  --query stageStates[*].actionStates[*].latestExecution.token
+```

@@ -14,6 +14,7 @@ from aws_cdk import (
 from constructs import Construct
 from .stages.deploy_app_stage import PipelineStageDeployApp
 from cdk_nag import NagSuppressions
+from ..lib.aws_chatbot.slack_construct import SlackChannelConfiguration
 
 
 class CdkPipelineECRStack(Stack):
@@ -25,6 +26,8 @@ class CdkPipelineECRStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # The code that defines your stack goes here
+        chatops = props.get("chatops", {})
+        pipeline_name = f"Pipeline_{props['project_name']}"
         # Create repository
 
         rep = codecommit.Repository(
@@ -46,7 +49,7 @@ class CdkPipelineECRStack(Stack):
             self,
             f"Pipeline{props['project_name']}",
             cross_account_keys=True,
-            pipeline_name=f"Pipeline_{props['project_name']}",
+            pipeline_name=pipeline_name,
             synth=pipelines.ShellStep("Synth",
                                       input=source,
                                       commands=[
@@ -55,6 +58,7 @@ class CdkPipelineECRStack(Stack):
                                           "npx cdk synth"
                                       ]
                                       ),
+
             self_mutation=True,
 
         )
@@ -120,11 +124,21 @@ class CdkPipelineECRStack(Stack):
         # Add SAST step
         deploy_dev_stg.add_pre(sast_test_step)
 
+        # manual approval props for slack
+        manual_approval_props = {"enabled": False}
         if props["ecr_repository_properties"][0]["deploy_app"] == "True":
             # Add manual approval to promote staging
-            manual_approval = pipelines.ManualApprovalStep("ApprovePushImage", comment="Allow Push Image version")
-            # Define Dependency
+            manual_approval_props["enabled"] = True
+            manual_approval_stage_name = deploy_dev_stg.stage_name
+            manual_approval_action_name = "ApprovePushImage"
+            manual_approval = pipelines.ManualApprovalStep(manual_approval_action_name,
+                                                           comment="Allow Push New Image version")
+            # manual approval props for slack
+            manual_approval_props["manual_approval_stage_name"] = manual_approval_stage_name
+            manual_approval_props["manual_approval_action_name"] = manual_approval_action_name
+            manual_approval_props["manual_approval_pipeline_name"] = pipeline_name
 
+            # Define Dependency
             build_spec = props["ecr_repository_properties"][0]["app_properties"]["build_spec"]
             push_image_step = pipelines.CodeBuildStep("PushImageStep",
                                                       project_name="PushImageStep",
@@ -164,6 +178,13 @@ class CdkPipelineECRStack(Stack):
         pipeline.build_pipeline()
         pipeline.pipeline.artifact_bucket.apply_removal_policy(RemovalPolicy.DESTROY)
 
+        if chatops["slack_integration"]["enable"] == "true":
+            SlackChannelConfiguration(self, "SlackChannel", props=chatops["slack_integration"],
+                                              project_name=props["project_name"],
+                                              manual_approval_props=manual_approval_props,
+                                              pipeline=pipeline.pipeline)
+
+
         # Extend permissions role push image step after build pipeline
         if props["ecr_repository_properties"][0]["deploy_app"] == "True":
             deploy_dev.stack.repository.grant_pull_push(push_image_step)
@@ -180,7 +201,7 @@ class CdkPipelineECRStack(Stack):
                                                        "reason": "CDK Pipelines Construct manage the policy"},
                                                       {"id": "AwsSolutions-CB4", "reason": "Intrinsic Property"},
                                                       {"id": "AwsSolutions-S1",
-                                                       "reason": "Intrinsic Property, Bucket loggin is necesary"},
+                                                       "reason": "Intrinsic Property, Bucket logging is necessary"},
                                                       {"id": "AwsSolutions-KMS5",
                                                        "reason": "Intrinsic Property, KMS is manage by CDK Pipeline Construct"},
                                                   ],

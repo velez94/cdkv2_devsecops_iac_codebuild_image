@@ -1,8 +1,14 @@
 project_name: "codebuild_devsecops_iac_images"
 framework_version: 2
 
-account_devsecops: "123456789021"
-region_devsecops: "us-east-2"
+account_devsecops: "#{account_devsecops}#"
+region_devsecops: "#{region_devsecops}#"
+
+chatops:
+  slack_integration:
+    enable: "true"
+    slack_workspace_id: "#{slack_workspace_id}#"
+    slack_channel_id: "#{slack_channel_id}#"
 
 #Repository for project
 repository_properties:
@@ -13,11 +19,11 @@ repository_properties:
 
 #Designed for pipeline
 environments:
-  - environment: 'prod'
-    deployment_account: '123456789014'
-    deployment_region: "us-east-2"
+  - environment: 'dev'
+    deployment_account: '#{deployment_account}#'
+    deployment_region: "#{deployment_region}#"
     partner_review_email:
-      - 'peer@mycompany.com'
+      - '#{partner_review_email}#'
 
 ecr_repository_properties:
   - repository_name: "codebuild_devsecops_iac"
@@ -28,7 +34,7 @@ ecr_repository_properties:
       max_images: 10
     resource_policy:
       accounts:
-        - account_id: "123456789014"
+        - account_id: "123456789014" # change or add account to share image
           type: "read"
       ous:
         - id: "o-xxxxxxxxxx/*/ou-xxxx-xxxxxxxx/*"
@@ -38,13 +44,11 @@ ecr_repository_properties:
       build_spec_path: "../app/buildspec.yaml"
       version: "1.1.0"
 
-
-
 # Tags definitions align with corporation instructions
 tags:
   - key: 'Project'
-    value: 'DevSecOpsIaC'
+    value: '#{project}#'
   - key: 'Environment'
-    value: 'test'
+    value: '#{environment}#'
 
 
