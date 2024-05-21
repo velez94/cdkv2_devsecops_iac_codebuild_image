@@ -10,7 +10,6 @@ dirname = os.path.dirname(__file__)
 props_paths = "./environment_options/environment_options.yml"
 
 props = (load_yamls(os.path.join(dirname, props_paths)))[0]
-
 env_client_devsecops_account = Environment(account=props['account_devsecops'], region=props['region_devsecops'])
 # Load Environments
 environments = {}

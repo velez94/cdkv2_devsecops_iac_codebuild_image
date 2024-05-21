@@ -17,6 +17,8 @@ bzip2 : /usr/share/doc/bzip2/copyright
 ----------------
 bzr : /usr/share/doc/bzr/copyright
 ----------------
+pack: https://github.com/buildpacks/pack/blob/main/LICENSE
+----------------
 ca-certificates-java : /usr/share/doc/ca-certificates-java/copyright
 ----------------
 curl : /usr/share/doc/curl/copyright
@@ -240,6 +242,8 @@ xsltproc : /usr/share/doc/xsltproc/copyright
 xvfb : /usr/share/doc/xvfb/copyright
 ----------------
 xz-utils : /usr/share/doc/xz-utils/copyright
+----------------
+git-lfs : /usr/share/doc/git-lfs/copyright
 ----------------
 zip : /usr/share/doc/zip/copyright
 ----------------

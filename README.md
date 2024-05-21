@@ -154,7 +154,7 @@ slack_channel_id: "C06TY4XXXX"
 
     b. Choose **Invite Them**.
 
-lejaalejaaaa
+
 If you want to customize the slack actions you can create custom buttons with cli automations or for invoking lambda functions. 
 
 ![](project_configs/docs/chatops/chatops_1.png)

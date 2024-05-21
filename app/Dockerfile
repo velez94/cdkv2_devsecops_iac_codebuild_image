@@ -283,18 +283,19 @@ RUN set -ex \
     && pip3 install --no-cache-dir --upgrade azure-devops
 
 #************************** Terraform *************************************
-ARG TERRAFORM_VERSION=1.7.5
+ARG TERRAFORM_VERSION=1.8.1
 RUN set -ex \
-    && curl -O https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
-    && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip  -d /usr/local/bin/ \
-    && mkdir -p "$HOME"/.terraform.d/plugin-cache && echo 'plugin_cache_dir   = "$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
+    && curl -O https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip  -d /usr/local/bin/
+RUN set -ex \
+    && mkdir -p $HOME/.terraform.d/plugin-cache && echo 'plugin_cache_dir   = "$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
 
 #************************* Terragrunt *************************************
-ARG TERRAGRUNT_VERSION=0.55.16
+ARG TERRAGRUNT_VERSION=0.56.5
 RUN set -ex \
      && wget https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 -q \
      && mv terragrunt_linux_amd64 /usr/local/bin/terragrunt \
      && chmod +x /usr/local/bin/terragrunt
+
 
 #*********************** Terramate ****************************************
 ARG TERRAMATE_VERSION=0.5.3
